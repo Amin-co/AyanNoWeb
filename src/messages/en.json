@@ -1,0 +1,107 @@
+{
+  "nav": {
+    "menu": "Menu",
+    "cart": "Cart",
+    "checkout": "Checkout",
+    "account": "Account",
+    "login": "Sign in / Register"
+  },
+  "landing": {
+    "status": {
+      "open": "We're open now",
+      "closed": "Temporarily closed",
+      "capacity": "Delivery capacity: {value}%",
+      "nextBreak": "Next break: {time}"
+    },
+    "hero": {
+      "overline": "QR hospitality",
+      "title": "Premium catering on demand",
+      "subtitle": "High quality takeaway with on-time delivery across the AyanNo service zone",
+      "description": "Pick one of the cards below to jump directly to what you need."
+    },
+    "cta": {
+      "orderNow": "Order from the menu",
+      "serviceArea": "Service area"
+    },
+    "badge": {
+      "new": "New",
+      "comingSoon": "Coming soon"
+    },
+    "cards": {
+      "menu": {
+        "title": "Digital menu",
+        "desc": "Browse the menu and choose your items"
+      },
+      "location": {
+        "title": "My location",
+        "desc": "Set your delivery address"
+      },
+      "service": {
+        "title": "Service coverage",
+        "desc": "Check if we deliver to you"
+      },
+      "login": {
+        "title": "Sign in / Register",
+        "desc": "Track orders and access your wallet"
+      },
+      "loyalty": {
+        "title": "Loyalty club",
+        "desc": "Earn points and unlock discounts"
+      }
+    }
+  },
+  "menu": {
+    "title": "Menu",
+    "description": "Browse the latest dishes and up-to-date pricing.",
+    "search": {
+      "placeholder": "Search dishes..."
+    },
+    "filters": {
+      "title": "Filters",
+      "price": "Price",
+      "diet": "Diet",
+      "spicy": "Spice level",
+      "allergens": "Allergens"
+    },
+    "addToCart": "Add to cart",
+    "soldOut": "Sold out",
+    "bestseller": "Bestseller",
+    "new": "New",
+    "economy": "Value",
+    "rating": "Rating",
+    "loading": "Loading menu...",
+    "error": "We can't load the menu right now. Please try again.",
+    "price": "${value}",
+    "priceUnavailable": "Pricing coming soon",
+    "descriptionFallback": "A tasty description will be added soon."
+  },
+  "cart": {
+    "title": "Cart",
+    "noteItem": "Note for this item",
+    "noteOrder": "Note for the whole order",
+    "subtotal": "Subtotal",
+    "discount": "Discount",
+    "shipping": "Delivery fee",
+    "tax": "Tax",
+    "total": "Total",
+    "checkout": "Proceed to checkout",
+    "emptyMessage": "Items you add will show up here for a quick review."
+  },
+  "checkout": {
+    "title": "Checkout",
+    "addresses": "Addresses",
+    "deliveryWindow": "Delivery window",
+    "payment": "Payment",
+    "applyCoupon": "Apply coupon",
+    "completePayment": "Complete payment",
+    "description": "Choose how you'd like to pay and confirm delivery or pickup details."
+  },
+  "account": {
+    "title": "Account",
+    "description": "Sign in to manage your profile, saved addresses, and loyalty rewards."
+  },
+  "footer": {
+    "legal": "© {year} {brand}. All rights reserved.",
+    "tagline": "Built for digital hospitality."
+  }
+}

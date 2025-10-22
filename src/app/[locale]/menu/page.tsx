@@ -1,6 +1,8 @@
 "use client";
 
+import { useMemo } from "react";
 import { useQuery } from "@tanstack/react-query";
+import { useLocale, useTranslations } from "next-intl";
 import Container from "@/components/ui/Container";
 import api from "@/lib/api";
 
@@ -35,35 +37,51 @@ const fetchMenu = async (): Promise<MenuItem[]> => {
 };
 
 export default function MenuPage() {
+  const locale = useLocale();
+  const t = useTranslations("menu");
+
   const { data, isLoading, isError } = useQuery({
     queryKey: ["menu"],
     queryFn: fetchMenu,
     staleTime: 1000 * 60,
   });
 
+  const numberFormatter = useMemo(() => {
+    return new Intl.NumberFormat(locale === "fa" ? "fa-IR" : "en-US", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    });
+  }, [locale]);
+
+  const formatPrice = (price?: number) => {
+    if (typeof price !== "number") {
+      return t("priceUnavailable");
+    }
+    const formatted = numberFormatter.format(price);
+    return t("price", { value: formatted });
+  };
+
   return (
     <main style={{ padding: "2rem 0" }}>
       <Container>
-        <h1>Menu</h1>
+        <h1>{t("title")}</h1>
         <p className="muted" style={{ marginBottom: "2rem" }}>
-          Browse the latest dishes and their current pricing.
+          {t("description")}
         </p>
 
-        {isLoading ? <p className="muted">Loading menu…</p> : null}
-        {isError ? (
-          <p className="muted">We’re unable to load the menu right now. Please try again.</p>
-        ) : null}
+        {isLoading ? <p className="muted">{t("loading")}</p> : null}
+        {isError ? <p className="muted">{t("error")}</p> : null}
 
-        {!isLoading && data && data.length > 0 ? (
+        {!isLoading && !isError && data && data.length > 0 ? (
           <div className="grid-5">
             {data.map((item) => (
               <div key={item.id} className="card">
                 <h3>{item.name}</h3>
                 <p className="muted">
-                  {item.description ?? "This item will soon include a tasty description."}
+                  {item.description ?? t("descriptionFallback")}
                 </p>
                 <p style={{ marginTop: "0.75rem", fontWeight: 600 }}>
-                  {item.price ? `₪${item.price.toFixed(2)}` : "Pricing on request"}
+                  {formatPrice(item.price)}
                 </p>
               </div>
             ))}

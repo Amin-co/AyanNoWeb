@@ -1,3 +1,5 @@
+"use client";
+
 import { useState } from "react";
 import {
   AppBar,
@@ -8,28 +10,38 @@ import {
   Drawer,
   List,
   ListItem,
-  ListItemButton,
   ListItemText,
   Divider,
   useMediaQuery,
 } from "@mui/material";
 import MenuIcon from "@mui/icons-material/Menu";
-import Link from "next/link";
 import { useTheme } from "@mui/material/styles";
+import { Link as IntlLink } from "@/navigation";
+import { useTranslations } from "next-intl";
+import LanguageSwitcher from "@/components/LanguageSwitcher";
 
-const navItems = [
-  { href: "/menu", label: "منو" },
-  { href: "/cart", label: "سبد" },
-  { href: "/checkout", label: "تسویه" },
-  { href: "/account", label: "حساب کاربری" },
-];
+type NavItem = {
+  href: string;
+  label: string;
+};
 
 const gold = "#D4AF37";
 
-export default function Header() {
+type HeaderProps = {
+  brandName: string;
+};
+
+export default function Header({ brandName }: HeaderProps) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [open, setOpen] = useState(false);
+  const tNav = useTranslations("nav");
+  const navItems: NavItem[] = [
+    { href: "/menu", label: tNav("menu") },
+    { href: "/cart", label: tNav("cart") },
+    { href: "/checkout", label: tNav("checkout") },
+    { href: "/account", label: tNav("account") },
+  ];
 
   const toggleDrawer = () => setOpen((prev) => !prev);
 
@@ -50,72 +62,78 @@ export default function Header() {
       }}
     >
       {navItems.map((item) => (
-        <Link key={item.href} href={item.href}>
+        <IntlLink key={item.href} href={item.href}>
           {item.label}
-        </Link>
+        </IntlLink>
       ))}
     </Box>
   );
 
   return (
-    <>
-      <AppBar
-        position="sticky"
-        elevation={0}
+    <AppBar
+      position="sticky"
+      elevation={0}
+      sx={{
+        backdropFilter: "blur(18px)",
+        backgroundColor: "rgba(18, 18, 18, 0.9)",
+        borderBottom: "1px solid rgba(255,255,255,0.06)",
+      }}
+    >
+      <Toolbar
         sx={{
-          backdropFilter: "blur(18px)",
-          backgroundColor: "rgba(18, 18, 18, 0.9)",
-          borderBottom: "1px solid rgba(255,255,255,0.06)",
+          maxWidth: "1200px",
+          width: "100%",
+          mx: "auto",
+          px: 2,
+          minHeight: 72,
+          display: "flex",
+          justifyContent: "space-between",
+          gap: 3,
         }}
       >
-        <Toolbar
+        <Box
           sx={{
-            maxWidth: "1200px",
-            width: "100%",
-            mx: "auto",
-            px: 2,
-            minHeight: 72,
             display: "flex",
-            justifyContent: "space-between",
-            gap: 3,
+            alignItems: "center",
+            gap: 1.5,
           }}
         >
+          <Typography
+            variant="h6"
+            component="div"
+            sx={{ fontWeight: 700, color: "#fff", letterSpacing: "0.08em" }}
+          >
+            {brandName}
+          </Typography>
+          <Divider
+            orientation="vertical"
+            flexItem
+            sx={{ borderColor: "rgba(255,255,255,0.08)" }}
+          />
           <Box
             sx={{
-              display: "flex",
-              alignItems: "center",
-              gap: 1.5,
+              width: 8,
+              height: 8,
+              borderRadius: "999px",
+              backgroundColor: gold,
             }}
-          >
-            <Typography
-              variant="h6"
-              component="div"
-              sx={{ fontWeight: 700, color: "#fff", letterSpacing: "0.08em" }}
-            >
-              اعیان‌نو
-            </Typography>
-            <Divider
-              orientation="vertical"
-              flexItem
-              sx={{ borderColor: "rgba(255,255,255,0.08)" }}
-            />
-            <Box
-              sx={{
-                width: 8,
-                height: 8,
-                borderRadius: "999px",
-                backgroundColor: gold,
-              }}
-            />
-          </Box>
+          />
+        </Box>
 
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 2,
+          }}
+        >
           {isMobile ? (
             <>
               <IconButton
                 edge="end"
                 onClick={toggleDrawer}
                 sx={{ color: gold }}
-                aria-label="منو"
+                aria-label="Open navigation"
               >
                 <MenuIcon />
               </IconButton>
@@ -133,22 +151,30 @@ export default function Header() {
               >
                 <Box sx={{ py: 3, px: 2 }}>
                   <Typography variant="h6" sx={{ mb: 2, fontWeight: 600 }}>
-                    اعیان‌نو
+                    {brandName}
                   </Typography>
                   <List sx={{ display: "flex", flexDirection: "column", gap: 1 }}>
                     {navItems.map((item) => (
                       <ListItem key={item.href} disablePadding>
-                        <ListItemButton
-                          component={Link}
+                        <Box
+                          component={IntlLink}
                           href={item.href}
                           onClick={toggleDrawer}
                           sx={{
+                            width: "100%",
+                            display: "block",
                             borderRadius: 2,
-                            "&:hover": { backgroundColor: "rgba(212,175,55,0.12)" },
+                            px: 2,
+                            py: 1,
+                            color: "inherit",
+                            textDecoration: "none",
+                            "&:hover": {
+                              backgroundColor: "rgba(212,175,55,0.12)",
+                            },
                           }}
                         >
                           <ListItemText primary={item.label} />
-                        </ListItemButton>
+                        </Box>
                       </ListItem>
                     ))}
                   </List>
@@ -158,8 +184,15 @@ export default function Header() {
           ) : (
             navLinks
           )}
-        </Toolbar>
-      </AppBar>
-    </>
+          <Box
+            sx={{
+              display: { xs: "none", md: "flex" },
+            }}
+          >
+            <LanguageSwitcher />
+          </Box>
+        </Box>
+      </Toolbar>
+    </AppBar>
   );
 }

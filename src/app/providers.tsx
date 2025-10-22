@@ -1,30 +1,34 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import { CacheProvider } from "@emotion/react";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider, CssBaseline } from "@mui/material";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
-import muiTheme from "@/theme/muiTheme";
+import { createMuiTheme } from "@/theme/muiTheme";
 import rtlCache from "@/lib/rtlCache";
 
 type ProvidersProps = {
   children: ReactNode;
+  dir: "rtl" | "ltr";
 };
 
-export default function Providers({ children }: ProvidersProps) {
+export default function Providers({ children, dir }: ProvidersProps) {
   const [queryClient] = useState(() => new QueryClient());
+  const theme = useMemo(() => createMuiTheme(dir), [dir]);
+
+  const content = (
+    <AppRouterCacheProvider options={{ key: "mui" }}>
+      <QueryClientProvider client={queryClient}>
+        <ThemeProvider theme={theme}>
+          <CssBaseline />
+          {children}
+        </ThemeProvider>
+      </QueryClientProvider>
+    </AppRouterCacheProvider>
+  );
 
   return (
-    <CacheProvider value={rtlCache}>
-      <AppRouterCacheProvider options={{ key: "mui" }}>
-        <QueryClientProvider client={queryClient}>
-          <ThemeProvider theme={muiTheme}>
-            <CssBaseline />
-            {children}
-          </ThemeProvider>
-        </QueryClientProvider>
-      </AppRouterCacheProvider>
-    </CacheProvider>
+    dir === "rtl" ? <CacheProvider value={rtlCache}>{content}</CacheProvider> : content
   );
 }

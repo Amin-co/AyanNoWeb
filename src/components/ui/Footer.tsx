@@ -1,10 +1,12 @@
+import { getTranslations } from "next-intl/server";
 import Container from "./Container";
 
 type FooterProps = {
   brandName: string;
 };
 
-export default function Footer({ brandName }: FooterProps) {
+export default async function Footer({ brandName }: FooterProps) {
+  const t = await getTranslations("footer");
   const year = new Date().getFullYear();
 
   return (
@@ -21,8 +23,8 @@ export default function Footer({ brandName }: FooterProps) {
             color: "rgba(255,255,255,0.65)",
           }}
         >
-          <span>© {year} {brandName}. All rights reserved.</span>
-          <span>Built for digital hospitality.</span>
+          <span>{t("legal", { year, brand: brandName })}</span>
+          <span>{t("tagline")}</span>
         </div>
       </Container>
     </footer>
