@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
-import "./globals.scss";
+import "@/app/globals.scss";
 import Providers from "./providers";
-import Header from "@/components/ui/Header";
+import Header from "@/components/layout/Header";
 import Footer from "@/components/ui/Footer";
 
 const brandName = process.env.APP_BRAND_NAME?.trim() || "AyanNo";
@@ -14,7 +14,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="fa" dir="rtl">
       <body>
         <Providers>
           <Header brandName={brandName} />

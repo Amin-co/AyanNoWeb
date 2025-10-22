@@ -1,38 +1,23 @@
 import { createTheme, responsiveFontSizes } from "@mui/material/styles";
 
-const primaryColor = process.env.APP_PRIMARY?.trim() || "#D4AF37";
-
 const theme = createTheme({
+  direction: "rtl",
   palette: {
     mode: "dark",
     primary: {
-      main: primaryColor,
+      main: "#D4AF37",
     },
-  },
-  typography: {
-    fontFamily: `'Vazirmatn', 'IRANSansX', 'Segoe UI', 'Tahoma', sans-serif`,
+    background: {
+      default: "#0E0E0E",
+      paper: "#141414",
+    },
   },
   shape: {
     borderRadius: 12,
   },
-  components: {
-    MuiButton: {
-      styleOverrides: {
-        root: {
-          borderRadius: 24,
-          paddingInline: "1.5rem",
-          textTransform: "none",
-        },
-      },
-    },
-    MuiCard: {
-      styleOverrides: {
-        root: {
-          borderRadius: 16,
-          boxShadow: "0 18px 30px rgba(0, 0, 0, 0.35)",
-        },
-      },
-    },
+  typography: {
+    fontFamily:
+      '"Vazirmatn", system-ui, -apple-system, "Segoe UI", "Roboto", "Helvetica Neue", "Arial", "Noto Sans", "Apple Color Emoji", "Segoe UI Emoji"',
   },
 });
 

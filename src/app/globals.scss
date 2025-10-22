@@ -1,7 +1,9 @@
+@import "@fontsource/vazirmatn/400.css";
+
 :root {
-  --color-primary: #d4af37;
-  --color-background: #0e0e0e;
-  --color-surface: #1a1a1a;
+  --gold: #D4AF37;
+  --bg: #0E0E0E;
+  --text: #EDEDED;
 }
 
 *,
@@ -12,9 +14,9 @@
 
 body {
   margin: 0;
-  background: var(--color-background);
-  color: #ffffff;
-  font-family: "Vazirmatn", "IRANSansX", "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Vazirmatn", sans-serif;
   line-height: 1.6;
 }
 
@@ -30,7 +32,7 @@ a {
 }
 
 .card {
-  background: var(--color-surface);
+  background: rgba(26, 26, 26, 0.85);
   border-radius: 12px;
   padding: 1.25rem;
   box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
