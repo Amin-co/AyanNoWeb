@@ -6,6 +6,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { ThemeProvider, CssBaseline } from "@mui/material";
 import { AppRouterCacheProvider } from "@mui/material-nextjs/v15-appRouter";
 import { createMuiTheme } from "@/theme/muiTheme";
+import { CartProvider } from "@/features/cart/store";
 import rtlCache from "@/lib/rtlCache";
 
 type ProvidersProps = {
@@ -20,10 +21,12 @@ export default function Providers({ children, dir }: ProvidersProps) {
   const content = (
     <AppRouterCacheProvider options={{ key: "mui" }}>
       <QueryClientProvider client={queryClient}>
-        <ThemeProvider theme={theme}>
-          <CssBaseline />
-          {children}
-        </ThemeProvider>
+        <CartProvider>
+          <ThemeProvider theme={theme}>
+            <CssBaseline />
+            {children}
+          </ThemeProvider>
+        </CartProvider>
       </QueryClientProvider>
     </AppRouterCacheProvider>
   );

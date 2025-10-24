@@ -1,4 +1,17 @@
 {
+  "common": {
+    "actions": {
+      "apply": "Apply",
+      "cancel": "Cancel",
+      "close": "Close"
+    },
+    "currency": {
+      "toman": "Toman"
+    },
+    "messages": {
+      "loadFailed": "We couldn't load the data."
+    }
+  },
   "nav": {
     "menu": "Menu",
     "cart": "Cart",
@@ -17,7 +30,7 @@
       "overline": "QR hospitality",
       "title": "Premium catering on demand",
       "subtitle": "High quality takeaway with on-time delivery across the AyanNo service zone",
-      "description": "Pick one of the cards below to jump directly to what you need."
+      "description": "Pick a card below to jump straight to what you need."
     },
     "cta": {
       "orderNow": "Order from the menu",
@@ -51,13 +64,13 @@
     }
   },
   "menu": {
-    "title": "Menu",
-    "description": "Browse the latest dishes and up-to-date pricing.",
+    "title": "Digital Menu",
     "search": {
       "placeholder": "Search dishes..."
     },
     "filters": {
       "title": "Filters",
+      "category": "Category",
       "price": "Price",
       "diet": "Diet",
       "spicy": "Spice level",
@@ -68,12 +81,18 @@
     "bestseller": "Bestseller",
     "new": "New",
     "economy": "Value",
-    "rating": "Rating",
+    "clearFilters": "Clear filters",
     "loading": "Loading menu...",
-    "error": "We can't load the menu right now. Please try again.",
+    "empty": "No items match your filters.",
     "price": "${value}",
-    "priceUnavailable": "Pricing coming soon",
-    "descriptionFallback": "A tasty description will be added soon."
+    "rating": "Rating {value}",
+    "drawer": {
+      "title": "Add to cart",
+      "description": "Choose optional variants or add-ons before sending the item to your cart.",
+      "variant": "Select an option",
+      "addOns": "Add-ons",
+      "confirm": "Add to cart"
+    }
   },
   "cart": {
     "title": "Cart",
@@ -85,23 +104,95 @@
     "tax": "Tax",
     "total": "Total",
     "checkout": "Proceed to checkout",
-    "emptyMessage": "Items you add will show up here for a quick review."
+    "emptyMessage": "Items you add will show up here for a quick review.",
+    "continueShopping": "Continue shopping",
+    "addOns": "Add-ons",
+    "couponApplied": "Coupon {code} applied.",
+    "clearCart": "Clear cart"
   },
   "checkout": {
     "title": "Checkout",
     "addresses": "Addresses",
+    "addAddress": "Add new address",
+    "deliveryMethod": "Delivery method",
+    "delivery": "Courier delivery",
+    "pickup": "Store pickup",
     "deliveryWindow": "Delivery window",
     "payment": "Payment",
+    "online": "Online",
+    "cash": "Cash",
+    "pos": "POS",
+    "wallet": "Wallet",
+    "mixed": "Mixed",
     "applyCoupon": "Apply coupon",
+    "couponPlaceholder": "e.g. gift2025",
+    "couponRequired": "Please enter a coupon code.",
+    "addressRequired": "Select a delivery address.",
+    "slotRequired": "Choose a delivery window.",
+    "addressFormIncomplete": "Fill in all fields to save an address.",
+    "deliveryWindowHint": "Pick the time slot that works best for you.",
+    "notePlaceholder": "Add any notes for the kitchen here.",
+    "noAddresses": "You haven't saved any addresses yet.",
+    "noSlots": "No delivery windows are available.",
+    "slotCapacity": "{available} spots left out of {capacity}.",
+    "addressLabel": "Address label",
+    "addressLine1": "Address details",
+    "city": "City",
+    "saveAddress": "Save address",
     "completePayment": "Complete payment",
-    "description": "Choose how you'd like to pay and confirm delivery or pickup details."
+    "success": "Your order has been placed successfully."
   },
   "account": {
     "title": "Account",
-    "description": "Sign in to manage your profile, saved addresses, and loyalty rewards."
+    "description": "Sign in to manage your profile, saved addresses, and loyalty rewards.",
+    "walletBalance": "Wallet balance",
+    "recentOrders": "Recent orders",
+    "emptyOrders": "You haven't placed any orders yet.",
+    "orderId": "Order ID {id}",
+    "orderTotal": "Amount",
+    "orderStatus": "Status: {value}",
+    "orderDate": "Date: {value}",
+    "loyaltyPoints": "Loyalty points",
+    "loyaltyHint": "Earn more rewards by placing additional orders.",
+    "authRequired": "Please sign in to view your account.",
+    "signIn": "Sign in"
+  },
+  "auth": {
+    "title": "Sign in with your phone",
+    "phoneLabel": "Mobile number (Iran format)",
+    "phonePlaceholder": "e.g. 09121234567 or +989121234567",
+    "requestCode": "Request verification code",
+    "codeLabel": "Verification code",
+    "codePlaceholder": "6-digit code",
+    "verifyCode": "Sign in",
+    "resend": "Resend",
+    "resendIn": "Resend in {seconds}s",
+    "invalidPhone": "Invalid phone number format.",
+    "invalidCode": "Invalid verification code.",
+    "success": "You signed in successfully."
+  },
+  "orders": {
+    "title": "Order details",
+    "items": "Items",
+    "subtotal": "Subtotal",
+    "discount": "Discount",
+    "shipping": "Delivery fee",
+    "tax": "Tax",
+    "total": "Total",
+    "delivery": "Delivery",
+    "payment": "Payment",
+    "back": "Back to orders",
+    "address": "Address",
+    "method": "Method",
+    "window": "Window",
+    "status": "Status",
+    "quantity": "Qty",
+    "addOns": "Add-ons",
+    "summary": "Order summary",
+    "empty": "Order not found."
   },
   "footer": {
-    "legal": "Â© {year} {brand}. All rights reserved.",
+    "legal": "© {year} {brand}. All rights reserved.",
     "tagline": "Built for digital hospitality."
   }
 }

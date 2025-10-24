@@ -1,0 +1,225 @@
+"use client";
+
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useReducer,
+  type ReactNode,
+} from "react";
+import type { CartItem } from "./types";
+
+type CartState = {
+  items: CartItem[];
+  note?: string;
+  couponCode?: string;
+  discount: number;
+};
+
+type CartAction =
+  | { type: "ADD_ITEM"; payload: CartItem }
+  | { type: "REMOVE_ITEM"; payload: { id: string } }
+  | { type: "UPDATE_QTY"; payload: { id: string; qty: number } }
+  | { type: "SET_ITEM_NOTE"; payload: { id: string; note?: string } }
+  | { type: "SET_ORDER_NOTE"; payload: { note?: string } }
+  | { type: "APPLY_COUPON"; payload: { couponCode?: string; discount?: number } }
+  | { type: "CLEAR_CART" }
+  | { type: "HYDRATE"; payload: CartState };
+
+const STORAGE_KEY = "ayanno_cart_v1";
+
+const initialState: CartState = {
+  items: [],
+  note: undefined,
+  couponCode: undefined,
+  discount: 0,
+};
+
+const cartReducer = (state: CartState, action: CartAction): CartState => {
+  switch (action.type) {
+    case "ADD_ITEM": {
+      const existingIndex = state.items.findIndex(
+        (entry) =>
+          entry.id === action.payload.id &&
+          entry.variant === action.payload.variant &&
+          JSON.stringify(entry.addOns ?? []) === JSON.stringify(action.payload.addOns ?? []),
+      );
+
+      if (existingIndex >= 0) {
+        const nextItems = [...state.items];
+        nextItems[existingIndex] = {
+          ...nextItems[existingIndex],
+          qty: nextItems[existingIndex].qty + action.payload.qty,
+        };
+        return { ...state, items: nextItems };
+      }
+
+      return {
+        ...state,
+        items: [...state.items, action.payload],
+      };
+    }
+    case "REMOVE_ITEM":
+      return {
+        ...state,
+        items: state.items.filter((item) => item.id !== action.payload.id),
+      };
+    case "UPDATE_QTY": {
+      const nextItems = state.items.map((item) =>
+        item.id === action.payload.id ? { ...item, qty: action.payload.qty } : item,
+      );
+      return {
+        ...state,
+        items: nextItems.filter((item) => item.qty > 0),
+      };
+    }
+    case "SET_ITEM_NOTE":
+      return {
+        ...state,
+        items: state.items.map((item) =>
+          item.id === action.payload.id ? { ...item, note: action.payload.note } : item,
+        ),
+      };
+    case "SET_ORDER_NOTE":
+      return {
+        ...state,
+        note: action.payload.note,
+      };
+    case "APPLY_COUPON":
+      return {
+        ...state,
+        couponCode: action.payload.couponCode,
+        discount: action.payload.discount ?? 0,
+      };
+    case "CLEAR_CART":
+      return {
+        items: [],
+        note: undefined,
+        couponCode: undefined,
+        discount: 0,
+      };
+    case "HYDRATE":
+      return {
+        ...state,
+        ...action.payload,
+        discount: action.payload.discount ?? 0,
+      };
+    default:
+      return state;
+  }
+};
+
+const CartContext = createContext<{
+  state: CartState;
+  actions: {
+    addItem: (item: CartItem) => void;
+    removeItem: (id: string) => void;
+    updateQty: (id: string, qty: number) => void;
+    setItemNote: (id: string, note?: string) => void;
+    setOrderNote: (note?: string) => void;
+    applyCoupon: (args: { couponCode?: string; discount?: number }) => void;
+    clearCart: () => void;
+  };
+} | null>(null);
+
+const loadFromStorage = (): CartState => {
+  if (typeof window === "undefined") {
+    return initialState;
+  }
+  try {
+    const payload = window.localStorage.getItem(STORAGE_KEY);
+    if (!payload) return initialState;
+    const parsed = JSON.parse(payload);
+    if (typeof parsed !== "object" || parsed === null) {
+      return initialState;
+    }
+    return {
+      items: Array.isArray(parsed.items) ? parsed.items : [],
+      note: typeof parsed.note === "string" ? parsed.note : undefined,
+      couponCode: typeof parsed.couponCode === "string" ? parsed.couponCode : undefined,
+      discount: typeof parsed.discount === "number" ? parsed.discount : 0,
+    };
+  } catch {
+    return initialState;
+  }
+};
+
+const persistState = (state: CartState) => {
+  if (typeof window === "undefined") return;
+  try {
+    window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    // swallow storage errors
+  }
+};
+
+export const CartProvider = ({ children }: { children: ReactNode }) => {
+  const [state, dispatch] = useReducer(cartReducer, initialState);
+
+  useEffect(() => {
+    const stored = loadFromStorage();
+    dispatch({ type: "HYDRATE", payload: stored });
+  }, []);
+
+  useEffect(() => {
+    if (state !== initialState) {
+      persistState(state);
+    }
+  }, [state]);
+
+  const addItem = useCallback((item: CartItem) => {
+    dispatch({ type: "ADD_ITEM", payload: item });
+  }, []);
+
+  const removeItem = useCallback((id: string) => {
+    dispatch({ type: "REMOVE_ITEM", payload: { id } });
+  }, []);
+
+  const updateQty = useCallback((id: string, qty: number) => {
+    dispatch({ type: "UPDATE_QTY", payload: { id, qty } });
+  }, []);
+
+  const setItemNote = useCallback((id: string, note?: string) => {
+    dispatch({ type: "SET_ITEM_NOTE", payload: { id, note } });
+  }, []);
+
+  const setOrderNote = useCallback((note?: string) => {
+    dispatch({ type: "SET_ORDER_NOTE", payload: { note } });
+  }, []);
+
+  const applyCoupon = useCallback((payload: { couponCode?: string; discount?: number }) => {
+    dispatch({ type: "APPLY_COUPON", payload });
+  }, []);
+
+  const clearCart = useCallback(() => {
+    dispatch({ type: "CLEAR_CART" });
+  }, []);
+
+  const value = useMemo(
+    () => ({
+      state,
+      actions: {
+        addItem,
+        removeItem,
+        updateQty,
+        setItemNote,
+        setOrderNote,
+        applyCoupon,
+        clearCart,
+      },
+    }),
+    [state, addItem, removeItem, updateQty, setItemNote, setOrderNote, applyCoupon, clearCart],
+  );
+
+  return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
+};
+
+export const useCart = () => {
+  const context = useContext(CartContext);
+  if (!context) {
+    throw new Error("useCart must be used within a CartProvider");
+  }
+  return context;
+};

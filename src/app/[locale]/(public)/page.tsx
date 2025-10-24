@@ -10,13 +10,17 @@ const serviceState = {
   nextBreak: "15:30",
 };
 
+type LandingPageParams = {
+  locale?: string;
+};
+
 export default async function LandingPage({
   params,
 }: {
-  params: Promise<{ locale: string }>;
+  params?: Promise<LandingPageParams>;
 }) {
-  const { locale } = await params;
-  const currentLocale = (locale as Locale | undefined) ?? defaultLocale;
+  const resolvedParams = (await params) ?? {};
+  const currentLocale = (resolvedParams.locale as Locale | undefined) ?? defaultLocale;
   const t = await getTranslations({ locale: currentLocale, namespace: "landing" });
   const dir = currentLocale === "fa" ? "rtl" : "ltr";
   const textAlignEnd = dir === "rtl" ? "left" : "right";

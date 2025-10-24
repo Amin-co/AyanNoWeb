@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { notFound } from "next/navigation";
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages } from "next-intl/server";
+import { getMessages, setRequestLocale } from "next-intl/server";
 import { locales, defaultLocale, type Locale } from "@/i18n/locales";
 import "@/app/globals.scss";
 import Providers from "../providers";
@@ -20,26 +20,32 @@ export function generateStaticParams() {
   return locales.map((locale) => ({ locale }));
 }
 
+type LayoutParams = {
+  locale?: string;
+};
+
 export default async function LocaleLayout({
   children,
   params,
 }: {
   children: ReactNode;
-  params: Promise<{ locale: string }>;
+  params?: Promise<LayoutParams>;
 }) {
-  const resolvedParams = await params;
-  const locale = (resolvedParams?.locale as Locale | undefined) ?? defaultLocale;
+  const resolvedParams = (await params) ?? {};
+  const localeFromParams = resolvedParams.locale;
+  const locale = (localeFromParams as Locale | undefined) ?? defaultLocale;
 
   if (!locales.includes(locale)) {
     notFound();
   }
 
+  setRequestLocale(locale);
   const messages = await getMessages({ locale });
   const dir = locale === "fa" ? "rtl" : "ltr";
 
   return (
-    <html lang={locale}>
-      <body dir={dir}>
+    <html lang={locale} dir={dir} suppressHydrationWarning>
+      <body>
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers dir={dir}>
             <Header brandName={brandName} />
