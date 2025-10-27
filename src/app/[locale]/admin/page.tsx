@@ -7,7 +7,6 @@ import {
   CardContent,
   Chip,
   CircularProgress,
-  Grid,
   Stack,
   Table,
   TableBody,
@@ -19,8 +18,10 @@ import {
   Button,
   Alert,
 } from "@mui/material";
+import Grid from "@mui/material/GridLegacy";
 import { useTranslations } from "next-intl";
-import { useParams, Link } from "@/navigation";
+import { useParams } from "next/navigation";
+import { Link } from "@/navigation";
 import apiAdmin from "@/lib/apiAdmin";
 
 type AdminOrdersResponse = {

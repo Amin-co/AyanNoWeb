@@ -10,7 +10,6 @@ import {
   Chip,
   CircularProgress,
   Divider,
-  Grid,
   Stack,
   Table,
   TableBody,
@@ -283,8 +282,14 @@ export default function AdminOrderDetailsPage() {
       {error ? <Alert severity="error">{error}</Alert> : null}
       {labelError ? <Alert severity="error">{labelError}</Alert> : null}
 
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={8}>
+      <Box
+        sx={{
+          display: "grid",
+          gap: 3,
+          gridTemplateColumns: { xs: "1fr", md: "minmax(0, 2fr) minmax(0, 1fr)" },
+        }}
+      >
+        <Box>
           <Card>
             <CardContent>
               <Typography variant="subtitle1" fontWeight={700}>
@@ -336,8 +341,8 @@ export default function AdminOrderDetailsPage() {
               </TableContainer>
             </CardContent>
           </Card>
-        </Grid>
-        <Grid item xs={12} md={4}>
+        </Box>
+        <Box>
           <Stack spacing={3}>
             <Card>
               <CardContent>
@@ -447,8 +452,8 @@ export default function AdminOrderDetailsPage() {
               </CardContent>
             </Card>
           </Stack>
-        </Grid>
-      </Grid>
+        </Box>
+      </Box>
     </Stack>
   );
 }

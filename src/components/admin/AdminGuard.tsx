@@ -12,7 +12,11 @@ type AdminGuardProps = {
 const AdminGuard = ({ children, locale }: AdminGuardProps) => {
   const router = useRouter();
   const pathname = usePathname();
-  const isLoginRoute = pathname.startsWith(`/${locale}/admin/login`);
+  const localePrefix = `/${locale}`;
+  const normalizedPath = pathname.startsWith(localePrefix)
+    ? pathname.slice(localePrefix.length) || "/"
+    : pathname || "/";
+  const isLoginRoute = normalizedPath.startsWith("/admin/login");
   const [verified, setVerified] = useState(isLoginRoute);
 
   useEffect(() => {
@@ -26,7 +30,7 @@ const AdminGuard = ({ children, locale }: AdminGuardProps) => {
         setVerified(true);
         return;
       }
-      router.replace(`/${locale}/admin/login?redirect=${encodeURIComponent(pathname)}`);
+      router.replace(`/admin/login?redirect=${encodeURIComponent(normalizedPath)}`);
       return;
     }
 
@@ -43,7 +47,7 @@ const AdminGuard = ({ children, locale }: AdminGuardProps) => {
         if (isLoginRoute) {
           setVerified(true);
         } else {
-          router.replace(`/${locale}/admin/login?redirect=${encodeURIComponent(pathname)}`);
+          router.replace(`/admin/login?redirect=${encodeURIComponent(normalizedPath)}`);
         }
       }
     };
@@ -53,7 +57,7 @@ const AdminGuard = ({ children, locale }: AdminGuardProps) => {
     return () => {
       active = false;
     };
-  }, [isLoginRoute, locale, pathname, router]);
+  }, [isLoginRoute, locale, normalizedPath, pathname, router]);
 
   if (!verified) {
     return null;

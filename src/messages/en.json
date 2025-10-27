@@ -192,7 +192,121 @@
     "empty": "Order not found."
   },
   "footer": {
-    "legal": "© {year} {brand}. All rights reserved.",
+    "legal": "ï¿½ {year} {brand}. All rights reserved.",
     "tagline": "Built for digital hospitality."
+  },
+  "admin": {
+    "login": {
+      "title": "Admin Sign In",
+      "phone": "Phone number",
+      "password": "Password",
+      "submit": "Sign in"
+    },
+    "home": {
+      "title": "Admin dashboard"
+    },
+    "nav": {
+      "dashboard": "Dashboard",
+      "orders": "Orders",
+      "items": "Items",
+      "categories": "Categories",
+      "addons": "Add-ons",
+      "settings": "Settings",
+      "catalog": "Catalog"
+    },
+    "orders": {
+      "title": "Order management",
+      "filterTitle": "Filters",
+      "column": {
+        "code": "Order code",
+        "customer": "Customer phone",
+        "total": "Total",
+        "method": "Method",
+        "status": "Status",
+        "createdAt": "Created at",
+        "actions": "Details"
+      },
+      "filter": {
+        "dateFrom": "Date from",
+        "dateTo": "Date to"
+      },
+      "listTitle": "Order list",
+      "detail": {
+        "items": "Order items",
+        "totals": "Totals",
+        "subtotal": "Subtotal",
+        "discount": "Discount",
+        "shipping": "Delivery fee",
+        "payable": "Payable",
+        "deliveryInfo": "Delivery / pickup details",
+        "payment": "Payment",
+        "operations": "Actions",
+        "deliveryWindow": "Delivery window",
+        "address": "Address",
+        "city": "City",
+        "none": "ï¿½",
+        "noItems": "No information available.",
+        "changeStatus": "Status change not available.",
+        "printLabel": "Print label",
+        "statusUpdated": "Order status updated.",
+        "addOns": "Add-ons",
+        "quantity": "Qty",
+        "unitPrice": "Unit price",
+        "lineTotal": "Line total",
+        "noStatusChange": "No status changes available.",
+        "deliveryPickup": "Pickup onsite",
+        "deliveryMethod": "Method",
+        "note": "Note"
+      },
+      "search": "Search orders",
+      "status": "Status",
+      "method": {
+        "delivery": "Delivery",
+        "pickup": "Pickup"
+      },
+      "filters": {
+        "reset": "Reset",
+        "apply": "Apply filters",
+        "all": "All"
+      },
+      "noResults": "No orders found.",
+      "pagination": {
+        "prev": "Previous",
+        "next": "Next"
+      },
+      "view": "View",
+      "updateStatus": "Update status"
+    },
+    "items": {
+      "title": "Item management",
+      "new": "New item",
+      "edit": "Edit",
+      "delete": "Delete"
+    },
+    "categories": {
+      "title": "Category management"
+    },
+    "addons": {
+      "title": "Add-on management"
+    },
+    "save": "Save",
+    "cancel": "Cancel",
+    "success": "Action completed successfully.",
+    "error": "Something went wrong.",
+    "forms": {
+      "name": "Name",
+      "slug": "Slug",
+      "parent": "Parent",
+      "order": "Sort order",
+      "active": "Active",
+      "seoTitle": "SEO title",
+      "seoDesc": "SEO description",
+      "create": "Create",
+      "edit": "Edit",
+      "delete": "Delete",
+      "save": "Save",
+      "cancel": "Cancel",
+      "newCategory": "New category"
+    }
   }
 }

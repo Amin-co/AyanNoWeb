@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useState } from "react";
+import { Suspense, useCallback, useState } from "react";
 import {
   Alert,
   Box,
@@ -11,17 +11,21 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { useRouter, useSearchParams } from "@/navigation";
+import { useRouter } from "@/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import apiAdmin from "@/lib/apiAdmin";
+import { defaultLocale } from "@/i18n/locales";
 
-export default function AdminLoginPage() {
+function AdminLoginPageInner() {
   const [phone, setPhone] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const params = useParams<{ locale?: string }>();
+  const locale = params?.locale ?? defaultLocale;
   const t = useTranslations("admin");
 
   const handleSubmit = useCallback(
@@ -45,7 +49,12 @@ export default function AdminLoginPage() {
           window.localStorage.setItem("admin_token", token);
         }
 
-        const redirect = searchParams.get("redirect") ?? `/${router.locale}/admin`;
+        const redirectParam = searchParams.get("redirect");
+        let redirect = redirectParam ?? "/admin";
+        const localePrefix = `/${locale}`;
+        if (redirect.startsWith(localePrefix)) {
+          redirect = redirect.slice(localePrefix.length) || "/";
+        }
         router.replace(redirect);
       } catch (err) {
         const message =
@@ -55,7 +64,7 @@ export default function AdminLoginPage() {
         setLoading(false);
       }
     },
-    [phone, password, router, searchParams, t],
+    [phone, password, router, searchParams, t, locale],
   );
 
   return (
@@ -110,5 +119,13 @@ export default function AdminLoginPage() {
         </CardContent>
       </Card>
     </Box>
+  );
+}
+
+export default function AdminLoginPage() {
+  return (
+    <Suspense fallback={null}>
+      <AdminLoginPageInner />
+    </Suspense>
   );
 }
