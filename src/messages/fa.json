@@ -257,7 +257,36 @@
       "title": "مدیریت کالاها",
       "new": "کالای جدید",
       "edit": "ویرایش",
-      "delete": "حذف"
+      "delete": "حذف",
+      "tabs": {
+        "details": "اطلاعات پایه",
+        "variants": "واریانت‌ها",
+        "addOnGroups": "گروه‌های افزودنی"
+      },
+      "messages": {
+        "noVariants": "هنوز واریانتی اضافه نشده است.",
+        "noAddOnGroups": "هنوز گروه افزودنی اضافه نشده است.",
+        "validation": "نام و قیمت معتبر الزامی است.",
+        "deleteConfirm": "آیا از حذف «{name}» مطمئن هستید؟ این عملیات قابل بازگشت نیست."
+      },
+      "fields": {
+        "variantName": "نام واریانت",
+        "variantPrice": "تفاوت قیمت",
+        "addOnGroupName": "نام گروه",
+        "minSelection": "حداقل انتخاب",
+        "maxSelection": "حداکثر انتخاب",
+        "required": "اجباری",
+        "addOns": "افزودنی‌ها"
+      },
+      "actions": {
+        "addVariant": "افزودن واریانت",
+        "addAddOnGroup": "افزودن گروه افزودنی",
+        "deleteVariant": "حذف واریانت",
+        "deleteGroup": "حذف گروه"
+      },
+      "hints": {
+        "images": "لینک‌ها را با ویرگول جدا کنید"
+      }
     },
     "categories": {
       "title": "مدیریت دسته‌ها"
@@ -275,6 +304,7 @@
       "parent": "والد",
       "order": "ترتیب",
       "active": "فعال",
+      "inactive": "غیرفعال",
       "seoTitle": "عنوان SEO",
       "seoDesc": "توضیح SEO",
       "create": "ایجاد",
@@ -282,7 +312,15 @@
       "delete": "حذف",
       "save": "ذخیره",
       "cancel": "انصراف",
-      "newCategory": "دسته جدید"
+      "newCategory": "دسته جدید",
+      "group": "گروه",
+      "price": "قیمت",
+      "newAddon": "افزودنی جدید",
+      "images": "تصاویر",
+      "categories": "دسته‌ها",
+      "description": "توضیح",
+      "newItem": "کالای جدید",
+      "updatedAt": "آخرین بروزرسانی"
     }
   },
   "orders": {

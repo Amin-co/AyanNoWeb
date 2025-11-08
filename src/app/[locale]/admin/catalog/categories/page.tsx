@@ -1,6 +1,8 @@
-﻿"use client";
+"use client";
 
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { FormEvent, useCallback, useEffect, useMemo, useState } from "react";
+import { useTranslations } from "next-intl";
+import apiAdmin from "@/lib/apiAdmin";
 import {
   Alert,
   Box,
@@ -12,9 +14,11 @@ import {
   Dialog,
   DialogActions,
   DialogContent,
+  DialogContentText,
   DialogTitle,
   FormControl,
   FormControlLabel,
+  IconButton,
   InputLabel,
   MenuItem,
   Select,
@@ -28,26 +32,24 @@ import {
   TableHead,
   TableRow,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
-import AddIcon from "@mui/icons-material/Add";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import MuiAlert from "@mui/material/Alert";
-import { useTranslations } from "next-intl";
-import apiAdmin from "@/lib/apiAdmin";
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
+import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
 type Category = {
   _id: string;
   name: string;
   slug: string;
-  parentId?: string;
+  parentId?: string | null;
   order?: number;
   active?: boolean;
+  seoTitle?: string;
+  seoDesc?: string;
 };
 
 type CategoryFormState = {
-  id?: string;
   name: string;
   slug: string;
   parentId: string;
@@ -69,17 +71,20 @@ const emptyForm: CategoryFormState = {
 
 const AdminCatalogCategoriesPage = () => {
   const t = useTranslations("admin");
-
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
   const [dialogOpen, setDialogOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<CategoryFormState>(emptyForm);
-  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>(
-    { open: false, message: "", severity: "success" },
-  );
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Category | null>(null);
+  const [deleteLoading, setDeleteLoading] = useState(false);
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string; severity: "success" | "error" }>({
+    open: false,
+    message: "",
+    severity: "success",
+  });
 
   const fetchCategories = useCallback(async () => {
     setLoading(true);
@@ -88,8 +93,8 @@ const AdminCatalogCategoriesPage = () => {
       const response = await apiAdmin.get("/admin/catalog/categories");
       const data: Category[] = response.data?.data ?? [];
       setCategories(data);
-    } catch (err) {
-      const message = err instanceof Error ? err.message : t("error");
+    } catch (fetchError) {
+      const message = fetchError instanceof Error ? fetchError.message : t("error");
       setError(message);
     } finally {
       setLoading(false);
@@ -101,111 +106,136 @@ const AdminCatalogCategoriesPage = () => {
   }, [fetchCategories]);
 
   const parentOptions = useMemo(
-    () => categories.map((cat) => ({ value: cat._id, label: cat.name })),
-    [categories],
+    () =>
+      categories
+        .filter((category) => category._id !== editingId)
+        .map((category) => ({ value: category._id, label: category.name })),
+    [categories, editingId],
   );
 
-  const handleOpenDialog = (category?: Category) => {
-    if (category) {
-      setForm({
-        id: category._id,
-        name: category.name ?? "",
-        slug: category.slug ?? "",
-        parentId: category.parentId ?? "",
-        order: category.order?.toString() ?? "",
-        active: category.active ?? true,
-        seoTitle: "",
-        seoDesc: "",
-      });
-    } else {
-      setForm(emptyForm);
-    }
+  const parentNameMap = useMemo(() => {
+    const map = new Map<string, string>();
+    categories.forEach((category) => {
+      map.set(category._id, category.name);
+    });
+    return map;
+  }, [categories]);
+
+  const handleChange = (field: keyof CategoryFormState, value: string | boolean) => {
+    setForm((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const handleOpenCreateDialog = () => {
+    setEditingId(null);
+    setForm(emptyForm);
+    setDialogOpen(true);
+  };
+
+  const handleOpenEditDialog = (category: Category) => {
+    setEditingId(category._id);
+    setForm({
+      name: category.name ?? "",
+      slug: category.slug ?? "",
+      parentId: category.parentId ?? "",
+      order: category.order?.toString() ?? "",
+      active: category.active ?? true,
+      seoTitle: category.seoTitle ?? "",
+      seoDesc: category.seoDesc ?? "",
+    });
     setDialogOpen(true);
   };
 
   const handleCloseDialog = () => {
     setDialogOpen(false);
     setForm(emptyForm);
+    setEditingId(null);
   };
 
-  const handleChange = (field: keyof CategoryFormState, value: string | boolean) => {
-    setForm((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setSaving(true);
-    setError(null);
+    const payload = {
+      name: form.name,
+      slug: form.slug,
+      parentId: form.parentId || undefined,
+      order: form.order ? Number(form.order) : undefined,
+      active: form.active,
+      seoTitle: form.seoTitle,
+      seoDesc: form.seoDesc,
+    };
+
     try {
-      const payload = {
-        name: form.name.trim(),
-        slug: form.slug.trim() || undefined,
-        parentId: form.parentId || undefined,
-        order: form.order ? Number(form.order) : undefined,
-        active: form.active,
-        seo: {
-          title: form.seoTitle.trim() || undefined,
-          desc: form.seoDesc.trim() || undefined,
-        },
-      };
-
-      if (!payload.name) {
-        throw new Error(`${t("forms.name")} الزامی است.`);
-      }
-
-      if (form.id) {
-        await apiAdmin.patch(`/admin/catalog/categories/${form.id}`, payload);
+      if (editingId) {
+        await apiAdmin.patch(`/admin/catalog/categories/${editingId}`, payload);
       } else {
         await apiAdmin.post("/admin/catalog/categories", payload);
       }
-
-      setSnackbar({ open: true, message: t("success"), severity: "success" });
       await fetchCategories();
+      setSnackbar({ open: true, severity: "success", message: t("success") });
       handleCloseDialog();
-    } catch (err) {
-      const message = err instanceof Error ? err.message : t("error");
-      setSnackbar({ open: true, message, severity: "error" });
+    } catch (submitError) {
+      console.error(submitError);
+      setSnackbar({ open: true, severity: "error", message: t("error") });
     } finally {
       setSaving(false);
     }
   };
 
-  const handleDelete = async (id: string) => {
-    if (!window.confirm("آیا از حذف این دسته مطمئن هستید؟")) return;
+  const handleOpenDeleteDialog = (category: Category) => {
+    setDeleteTarget(category);
+    setDeleteLoading(false);
+  };
+
+  const handleCloseDeleteDialog = () => {
+    setDeleteTarget(null);
+    setDeleteLoading(false);
+  };
+
+  const handleDelete = async () => {
+    if (!deleteTarget) {
+      return;
+    }
+    setDeleteLoading(true);
     try {
-      await apiAdmin.delete(`/admin/catalog/categories/${id}`);
-      setSnackbar({ open: true, message: t("success"), severity: "success" });
+      await apiAdmin.delete(`/admin/catalog/categories/${deleteTarget._id}`);
       await fetchCategories();
-    } catch (err) {
-      const message = err instanceof Error ? err.message : t("error");
-      setSnackbar({ open: true, message, severity: "error" });
+      setSnackbar({ open: true, severity: "success", message: t("success") });
+      handleCloseDeleteDialog();
+    } catch (deleteError) {
+      console.error(deleteError);
+      setSnackbar({ open: true, severity: "error", message: t("error") });
+    } finally {
+      setDeleteLoading(false);
     }
   };
 
+  const closeSnackbar = () => setSnackbar((prev) => ({ ...prev, open: false }));
+  const isEditMode = Boolean(editingId);
+
   return (
     <Stack spacing={3}>
-      <Card>
-        <CardContent sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <Typography variant="h5" fontWeight={700}>
-            {t("categories.title")}
-          </Typography>
-          <Button variant="contained" startIcon={<AddIcon />} onClick={() => handleOpenDialog()}>
-            {t("forms.newCategory")}
-          </Button>
-        </CardContent>
-      </Card>
-
-      {error ? <Alert severity="error">{error}</Alert> : null}
+      <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <Typography variant="h5">{t("categories.title")}</Typography>
+        <Button variant="contained" onClick={handleOpenCreateDialog}>
+          {t("forms.newCategory")}
+        </Button>
+      </Stack>
 
       <Card>
         <CardContent>
           {loading ? (
-            <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
+            <Box display="flex" justifyContent="center" py={6}>
               <CircularProgress />
             </Box>
+          ) : error ? (
+            <Alert severity="error">{error}</Alert>
+          ) : categories.length === 0 ? (
+            <Typography align="center" color="text.secondary">
+              هنوز هیچ دسته‌ای ثبت نشده است.
+            </Typography>
           ) : (
             <TableContainer>
-              <Table>
+              <Table size="small">
                 <TableHead>
                   <TableRow>
                     <TableCell>{t("forms.name")}</TableCell>
@@ -213,44 +243,39 @@ const AdminCatalogCategoriesPage = () => {
                     <TableCell>{t("forms.parent")}</TableCell>
                     <TableCell>{t("forms.order")}</TableCell>
                     <TableCell>{t("forms.active")}</TableCell>
-                    <TableCell align="left">{t("forms.edit")}</TableCell>
+                    <TableCell align="right">{t("orders.column.actions")}</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
                   {categories.map((category) => (
-                    <TableRow key={category._id} hover>
+                    <TableRow key={category._id}>
                       <TableCell>{category.name}</TableCell>
                       <TableCell>{category.slug}</TableCell>
-                      <TableCell>
-                        {categories.find((cat) => cat._id === category.parentId)?.name ?? "—"}
-                      </TableCell>
-                      <TableCell>{category.order ?? "—"}</TableCell>
+                      <TableCell>{category.parentId ? parentNameMap.get(category.parentId) ?? "-" : "-"}</TableCell>
+                      <TableCell>{category.order ?? "-"}</TableCell>
                       <TableCell>
                         <Chip
-                          label={category.active ? "فعال" : "غیرفعال"}
+                          label={category.active ? t("forms.active") : t("forms.inactive")}
                           color={category.active ? "success" : "default"}
                           size="small"
                         />
                       </TableCell>
-                      <TableCell>
-                        <Stack direction="row" spacing={1}>
-                          <Button color="primary" onClick={() => handleOpenDialog(category)}>
-                            <EditIcon fontSize="small" />
-                          </Button>
-                          <Button color="error" onClick={() => handleDelete(category._id)}>
-                            <DeleteIcon fontSize="small" />
-                          </Button>
+                      <TableCell align="right">
+                        <Stack direction="row" spacing={1} justifyContent="flex-end">
+                          <Tooltip title={t("forms.edit")}>
+                            <IconButton size="small" onClick={() => handleOpenEditDialog(category)}>
+                              <EditOutlinedIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
+                          <Tooltip title={t("forms.delete")}>
+                            <IconButton size="small" color="error" onClick={() => handleOpenDeleteDialog(category)}>
+                              <DeleteOutlineIcon fontSize="small" />
+                            </IconButton>
+                          </Tooltip>
                         </Stack>
                       </TableCell>
                     </TableRow>
                   ))}
-                  {categories.length === 0 ? (
-                    <TableRow>
-                      <TableCell colSpan={6} align="center">
-                        دسته‌ای یافت نشد.
-                      </TableCell>
-                    </TableRow>
-                  ) : null}
                 </TableBody>
               </Table>
             </TableContainer>
@@ -259,7 +284,7 @@ const AdminCatalogCategoriesPage = () => {
       </Card>
 
       <Dialog open={dialogOpen} onClose={handleCloseDialog} fullWidth maxWidth="sm">
-        <DialogTitle>{form.id ? t("forms.edit") : t("forms.create")}</DialogTitle>
+        <DialogTitle>{isEditMode ? t("forms.edit") : t("forms.newCategory")}</DialogTitle>
         <Box component="form" onSubmit={handleSubmit}>
           <DialogContent>
             <Stack spacing={2}>
@@ -280,20 +305,18 @@ const AdminCatalogCategoriesPage = () => {
                 <InputLabel id="parent-label">{t("forms.parent")}</InputLabel>
                 <Select
                   labelId="parent-label"
-                  value={form.parentId}
                   label={t("forms.parent")}
-                  onChange={(event) => handleChange("parentId", event.target.value as string)}
+                  value={form.parentId}
+                  onChange={(event) => handleChange("parentId", event.target.value)}
                 >
                   <MenuItem value="">
-                    <em>—</em>
+                    <em>-</em>
                   </MenuItem>
-                  {parentOptions
-                    .filter((option) => option.value !== form.id)
-                    .map((option) => (
-                      <MenuItem key={option.value} value={option.value}>
-                        {option.label}
-                      </MenuItem>
-                    ))}
+                  {parentOptions.map((option) => (
+                    <MenuItem key={option.value} value={option.value}>
+                      {option.label}
+                    </MenuItem>
+                  ))}
                 </Select>
               </FormControl>
               <TextField
@@ -304,12 +327,7 @@ const AdminCatalogCategoriesPage = () => {
                 fullWidth
               />
               <FormControlLabel
-                control={
-                  <Switch
-                    checked={form.active}
-                    onChange={(event) => handleChange("active", event.target.checked)}
-                  />
-                }
+                control={<Switch checked={form.active} onChange={(event) => handleChange("active", event.target.checked)} />}
                 label={t("forms.active")}
               />
               <TextField
@@ -331,25 +349,31 @@ const AdminCatalogCategoriesPage = () => {
           <DialogActions>
             <Button onClick={handleCloseDialog}>{t("forms.cancel")}</Button>
             <Button type="submit" variant="contained" disabled={saving}>
-              {saving ? "در حال ذخیره..." : t("forms.save")}
+              {t("forms.save")}
             </Button>
           </DialogActions>
         </Box>
       </Dialog>
 
-      <Snackbar
-        open={snackbar.open}
-        autoHideDuration={4000}
-        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
-      >
-        <MuiAlert
-          elevation={6}
-          variant="filled"
-          severity={snackbar.severity}
-          onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
-        >
+      <Dialog open={Boolean(deleteTarget)} onClose={handleCloseDeleteDialog}>
+        <DialogTitle>{t("forms.delete")}</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            {`آیا از حذف "${deleteTarget?.name ?? ""}" مطمئن هستید؟ این عملیات قابل بازگشت نیست.`}
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDeleteDialog}>{t("forms.cancel")}</Button>
+          <Button onClick={handleDelete} color="error" variant="contained" disabled={deleteLoading || !deleteTarget}>
+            {t("forms.delete")}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      <Snackbar open={snackbar.open} autoHideDuration={4000} onClose={closeSnackbar}>
+        <Alert onClose={closeSnackbar} severity={snackbar.severity} sx={{ width: "100%" }}>
           {snackbar.message}
-        </MuiAlert>
+        </Alert>
       </Snackbar>
     </Stack>
   );

@@ -1,7 +1,11 @@
-﻿import { redirect } from "next/navigation";
-import { defaultLocale } from "@/i18n/locales";
+import { redirect } from "next/navigation";
 
-export default function AdminCatalogIndex() {
-  redirect(`/${defaultLocale}/admin/catalog/items`);
+type AdminCatalogIndexProps = {
+  params: {
+    locale: string;
+  };
+};
+
+export default function AdminCatalogIndex({ params }: AdminCatalogIndexProps) {
+  redirect(`/${params.locale}/admin/catalog/items`);
 }
-

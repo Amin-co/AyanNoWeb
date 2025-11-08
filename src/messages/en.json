@@ -281,7 +281,36 @@
       "title": "Item management",
       "new": "New item",
       "edit": "Edit",
-      "delete": "Delete"
+      "delete": "Delete",
+      "tabs": {
+        "details": "Details",
+        "variants": "Variants",
+        "addOnGroups": "Add-on groups"
+      },
+      "messages": {
+        "noVariants": "No variants added yet.",
+        "noAddOnGroups": "No add-on groups added yet.",
+        "validation": "Name and price are required.",
+        "deleteConfirm": "Are you sure you want to delete “{name}”? This action cannot be undone."
+      },
+      "fields": {
+        "variantName": "Variant name",
+        "variantPrice": "Price difference",
+        "addOnGroupName": "Group name",
+        "minSelection": "Min selection",
+        "maxSelection": "Max selection",
+        "required": "Required",
+        "addOns": "Add-ons"
+      },
+      "actions": {
+        "addVariant": "Add variant",
+        "addAddOnGroup": "Add add-on group",
+        "deleteVariant": "Remove variant",
+        "deleteGroup": "Remove group"
+      },
+      "hints": {
+        "images": "Separate links with commas"
+      }
     },
     "categories": {
       "title": "Category management"
@@ -299,6 +328,7 @@
       "parent": "Parent",
       "order": "Sort order",
       "active": "Active",
+      "inactive": "Inactive",
       "seoTitle": "SEO title",
       "seoDesc": "SEO description",
       "create": "Create",
@@ -306,7 +336,15 @@
       "delete": "Delete",
       "save": "Save",
       "cancel": "Cancel",
-      "newCategory": "New category"
+      "newCategory": "New category",
+      "group": "Group",
+      "price": "Price",
+      "newAddon": "New add-on",
+      "images": "Images",
+      "categories": "Categories",
+      "description": "Description",
+      "newItem": "New item",
+      "updatedAt": "Last updated"
     }
   }
 }
