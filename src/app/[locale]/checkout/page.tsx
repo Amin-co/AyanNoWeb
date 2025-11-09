@@ -106,7 +106,10 @@ export default function CheckoutPage() {
   const [addressDialogOpen, setAddressDialogOpen] = useState(false);
   const [addressForm, setAddressForm] = useState({ label: "", line1: "", city: "" });
   const [submitError, setSubmitError] = useState<string | null>(null);
-  const [snackbarMessage, setSnackbarMessage] = useState<string | null>(null);
+  const [slotConflictWindow, setSlotConflictWindow] = useState<string | null>(null);
+  const [snackbar, setSnackbar] = useState<
+    { message: string; severity: "success" | "error" } | null
+  >(null);
   const [sessionReady, setSessionReady] = useState(false);
   const [hasToken, setHasToken] = useState(false);
 
@@ -125,7 +128,8 @@ export default function CheckoutPage() {
     () => items.reduce((total, item) => total + item.price * item.qty, 0),
     [items],
   );
-  const shippingFee = 0;
+  const baseShippingFee = 0;
+  const shippingFee = deliveryMethod === "delivery" ? baseShippingFee : 0;
   const tax = 0;
   const total = subtotal - discount + shippingFee + tax;
   const currencyLabel = commonT("currency.toman");
@@ -160,6 +164,7 @@ export default function CheckoutPage() {
     if (deliveryMethod === "pickup") {
       setSelectedAddressId(undefined);
       setSelectedSlotWindow(null);
+      setSlotConflictWindow(null);
     }
   }, [deliveryMethod]);
 
@@ -260,6 +265,19 @@ export default function CheckoutPage() {
             }
           : undefined;
 
+      const deliveryPayload: {
+        method: "delivery" | "pickup";
+        addressId?: string;
+        slot?: { date: string; window: string };
+      } =
+        deliveryMethod === "delivery"
+          ? {
+              method: "delivery",
+              addressId: selectedAddressId,
+              ...(slotPayload ? { slot: slotPayload } : {}),
+            }
+          : { method: "pickup" };
+
       const { data } = await api.post<OrderCreateResponse>("/orders", {
         channel: "online",
         items: items.map((item) => ({
@@ -268,11 +286,7 @@ export default function CheckoutPage() {
           variant: item.variant,
           addOns: (item.addOns ?? []).map((addon) => addon.id),
         })),
-        delivery: {
-          method: deliveryMethod,
-          addressId: deliveryMethod === "delivery" ? selectedAddressId : undefined,
-          slot: slotPayload,
-        },
+        delivery: deliveryPayload,
         couponCode: couponCode ?? undefined,
         payment: {
           method: selectedPayment,
@@ -286,7 +300,11 @@ export default function CheckoutPage() {
     },
     onSuccess: (data) => {
       clearCart();
-      setSnackbarMessage(t("success"));
+      setSlotConflictWindow(null);
+      setSnackbar({
+        message: deliveryMethod === "pickup" ? t("successPickup") : t("success"),
+        severity: "success",
+      });
       if (data?.orderId) {
         router.push(`/account/orders/${data.orderId}`);
       } else {
@@ -294,10 +312,27 @@ export default function CheckoutPage() {
       }
     },
     onError: (error) => {
-      const message =
-        (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
-        commonT("messages.loadFailed");
+      const response = (error as {
+        response?: { status?: number; data?: { message?: string } };
+      })?.response;
+      const message = response?.data?.message ?? commonT("messages.loadFailed");
+
+      if (response?.status === 409) {
+        const conflictMessage = response.data?.message ?? "ظرفیت این بازه تکمیل است";
+        setSlotConflictWindow(selectedSlotWindow);
+        setSubmitError(conflictMessage);
+        setSnackbar({
+          message: conflictMessage,
+          severity: "error",
+        });
+        return;
+      }
+
       setSubmitError(message);
+      setSnackbar({
+        message,
+        severity: "error",
+      });
     },
   });
 
@@ -334,10 +369,14 @@ export default function CheckoutPage() {
           ? `-${formatCurrency(locale, discount)} ${currencyLabel}`
           : `${formatCurrency(locale, discount)} ${currencyLabel}`,
     },
-    {
-      label: cartT("shipping"),
-      value: `${formatCurrency(locale, shippingFee)} ${currencyLabel}`,
-    },
+    ...(deliveryMethod === "delivery"
+      ? [
+          {
+            label: cartT("shipping"),
+            value: `${formatCurrency(locale, shippingFee)} ${currencyLabel}`,
+          },
+        ]
+      : []),
     {
       label: cartT("tax"),
       value: `${formatCurrency(locale, tax)} ${currencyLabel}`,
@@ -452,31 +491,55 @@ export default function CheckoutPage() {
                           {t("noSlots")}
                         </Typography>
                       ) : (
-                        <RadioGroup
-                          value={selectedSlotWindow ?? ""}
-                          onChange={(event) => setSelectedSlotWindow(event.target.value)}
-                        >
-                          {slots.map((slot) => (
-                            <FormControlLabel
-                              key={slot.window}
-                              value={slot.window}
-                              control={<Radio />}
-                              label={
-                                <Box>
-                                  <Typography variant="subtitle2" fontWeight={600}>
-                                    {slot.window}
-                                  </Typography>
-                                  <Typography variant="caption" color="text.secondary">
-                                    {t("slotCapacity", {
-                                      available: slot.available,
-                                      capacity: slot.capacity,
-                                    })}
-                                  </Typography>
-                                </Box>
+                        <>
+                          <RadioGroup
+                            value={selectedSlotWindow ?? ""}
+                            onChange={(event) => {
+                              setSelectedSlotWindow(event.target.value);
+                              if (slotConflictWindow) {
+                                setSlotConflictWindow(null);
                               }
-                            />
-                          ))}
-                        </RadioGroup>
+                            }}
+                          >
+                            {slots.map((slot) => {
+                              const isConflict = slotConflictWindow === slot.window;
+                              return (
+                                <FormControlLabel
+                                  key={slot.window}
+                                  value={slot.window}
+                                  control={<Radio color={isConflict ? "error" : "primary"} />}
+                                  sx={{
+                                    alignItems: "flex-start",
+                                    borderRadius: 1,
+                                    border: isConflict ? "1px solid" : undefined,
+                                    borderColor: isConflict ? "error.main" : undefined,
+                                    mb: 1,
+                                    py: 0.5,
+                                    px: 1,
+                                  }}
+                                  label={
+                                    <Box sx={{ color: isConflict ? "error.main" : "inherit" }}>
+                                      <Typography variant="subtitle2" fontWeight={600}>
+                                        {slot.window}
+                                      </Typography>
+                                      <Typography variant="caption" color={isConflict ? "error" : "text.secondary"}>
+                                        {t("slotCapacity", {
+                                          available: slot.available,
+                                          capacity: slot.capacity,
+                                        })}
+                                      </Typography>
+                                    </Box>
+                                  }
+                                />
+                              );
+                            })}
+                          </RadioGroup>
+                          {slotConflictWindow && (
+                            <Typography variant="caption" color="error" mt={1}>
+                              {t("slotConflictPrompt")}
+                            </Typography>
+                          )}
+                        </>
                       )}
                     </CardContent>
                   </Card>
@@ -637,16 +700,18 @@ export default function CheckoutPage() {
         </DialogActions>
       </Dialog>
 
-      <Snackbar
-        open={Boolean(snackbarMessage)}
-        autoHideDuration={6000}
-        onClose={() => setSnackbarMessage(null)}
-        anchorOrigin={{ vertical: "bottom", horizontal: locale === "fa" ? "left" : "right" }}
-      >
-        <Alert severity="success" onClose={() => setSnackbarMessage(null)}>
-          {snackbarMessage}
-        </Alert>
-      </Snackbar>
+      {snackbar ? (
+        <Snackbar
+          open
+          autoHideDuration={6000}
+          onClose={() => setSnackbar(null)}
+          anchorOrigin={{ vertical: "bottom", horizontal: locale === "fa" ? "left" : "right" }}
+        >
+          <Alert severity={snackbar.severity} onClose={() => setSnackbar(null)}>
+            {snackbar.message}
+          </Alert>
+        </Snackbar>
+      ) : null}
     </main>
   );
 }

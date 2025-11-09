@@ -1,11 +1,14 @@
 import { redirect } from "next/navigation";
 
-type AdminCatalogIndexProps = {
-  params: {
-    locale: string;
-  };
+type AdminCatalogIndexParams = {
+  locale: string;
 };
 
-export default function AdminCatalogIndex({ params }: AdminCatalogIndexProps) {
-  redirect(`/${params.locale}/admin/catalog/items`);
+export default async function AdminCatalogIndex({
+  params,
+}: {
+  params: Promise<AdminCatalogIndexParams>;
+}) {
+  const { locale } = await params;
+  redirect(`/${locale}/admin/catalog/items`);
 }

@@ -63,6 +63,19 @@
       }
     }
   },
+  "serviceArea": {
+    "title": "Where we deliver",
+    "description": "See which neighborhoods are covered and what the minimum order is for each zone.",
+    "cta": "Check my address",
+    "mapAlt": "Map placeholder showing the service area",
+    "mapCaption": "Coverage map (illustrative only). Enter checkout to confirm your exact location.",
+    "zones": {
+      "title": "Delivery zones",
+      "minOrder": "Minimum order: {value}",
+      "shippingFee": "Shipping fee: {value}",
+      "empty": "No delivery zones are currently available."
+    }
+  },
   "menu": {
     "title": "Digital Menu",
     "search": {
@@ -140,7 +153,9 @@
     "city": "City",
     "saveAddress": "Save address",
     "completePayment": "Complete payment",
-    "success": "Your order has been placed successfully."
+    "success": "Your order has been placed successfully.",
+    "successPickup": "Your pickup order has been registered.",
+    "slotConflictPrompt": "Please select another window."
   },
   "account": {
     "title": "Account",
@@ -197,13 +212,15 @@
   },
   "admin": {
     "login": {
-      "title": "Admin Sign In",
+      "title": "Admin Login",
+      "description": "Enter your phone number and password.",
       "phone": "Phone number",
       "password": "Password",
-      "submit": "Sign in"
+      "submit": "Sign in",
+      "loading": "Signing in..."
     },
     "home": {
-      "title": "Admin dashboard"
+      "title": "Admin Dashboard"
     },
     "nav": {
       "dashboard": "Dashboard",
@@ -217,6 +234,15 @@
     "orders": {
       "title": "Order management",
       "filterTitle": "Filters",
+      "filters": {
+        "status": "Status",
+        "dateFrom": "Date from",
+        "dateTo": "Date to",
+        "search": "Search order",
+        "reset": "Reset",
+        "apply": "Apply filters",
+        "all": "All"
+      },
       "column": {
         "code": "Order code",
         "customer": "Customer phone",
@@ -226,12 +252,9 @@
         "createdAt": "Created at",
         "actions": "Details"
       },
-      "filter": {
-        "dateFrom": "Date from",
-        "dateTo": "Date to"
-      },
       "listTitle": "Order list",
       "detail": {
+        "summary": "Order summary",
         "items": "Order items",
         "totals": "Totals",
         "subtotal": "Subtotal",
@@ -240,13 +263,14 @@
         "payable": "Payable",
         "deliveryInfo": "Delivery / pickup details",
         "payment": "Payment",
+        "paymentStatusLabel": "Payment status",
         "operations": "Actions",
         "deliveryWindow": "Delivery window",
         "address": "Address",
         "city": "City",
-        "none": "�",
+        "none": "—",
         "noItems": "No information available.",
-        "changeStatus": "Status change not available.",
+        "changeStatus": "Select a new status to update the order.",
         "printLabel": "Print label",
         "statusUpdated": "Order status updated.",
         "addOns": "Add-ons",
@@ -256,7 +280,21 @@
         "noStatusChange": "No status changes available.",
         "deliveryPickup": "Pickup onsite",
         "deliveryMethod": "Method",
-        "note": "Note"
+        "note": "Note",
+        "paymentStatus": {
+          "paid": "Paid",
+          "pending": "Awaiting payment",
+          "failed": "Payment failed",
+          "refunded": "Refunded"
+        }
+      },
+      "statusLabels": {
+        "pending": "Pending",
+        "preparing": "Preparing",
+        "ready": "Ready for pickup",
+        "out_for_delivery": "Out for delivery",
+        "delivered": "Delivered",
+        "canceled": "Canceled"
       },
       "search": "Search orders",
       "status": "Status",
@@ -264,18 +302,26 @@
         "delivery": "Delivery",
         "pickup": "Pickup"
       },
-      "filters": {
-        "reset": "Reset",
-        "apply": "Apply filters",
-        "all": "All"
-      },
       "noResults": "No orders found.",
       "pagination": {
         "prev": "Previous",
         "next": "Next"
       },
       "view": "View",
-      "updateStatus": "Update status"
+      "updateStatus": "Update status",
+      "latest": "Latest orders",
+      "subtitle": "Showing the 10 most recent orders for quick access.",
+      "viewAll": "View all orders",
+      "table": {
+        "code": "Order code",
+        "phone": "Customer phone",
+        "total": "Total",
+        "method": "Method",
+        "status": "Status",
+        "createdAt": "Created at",
+        "actions": "Actions"
+      },
+      "empty": "No orders have been placed yet."
     },
     "items": {
       "title": "Item management",
@@ -345,6 +391,10 @@
       "description": "Description",
       "newItem": "New item",
       "updatedAt": "Last updated"
+    },
+    "kpi": {
+      "ordersToday": "Orders today",
+      "salesToday": "Sales today"
     }
   }
 }

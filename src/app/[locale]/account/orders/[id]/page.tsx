@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   Box,
   Button,
@@ -17,6 +17,9 @@ import { useRouter } from "@/navigation";
 import { useQuery } from "@tanstack/react-query";
 import Container from "@/components/ui/Container";
 import api from "@/lib/api";
+
+const API_BASE_URL =
+  process.env.NEXT_PUBLIC_API_BASE?.trim() || "http://localhost:4000";
 
 type OrderItem = {
   itemId: string;
@@ -36,6 +39,7 @@ type OrderDetail = {
   total: number;
   createdAt: string;
   items: OrderItem[];
+  invoiceAvailable?: boolean;
   address?: {
     label?: string;
     line1?: string;
@@ -73,6 +77,7 @@ export default function OrderDetailPage() {
   const commonT = useTranslations("common");
   const router = useRouter();
   const currencyLabel = commonT("currency.toman");
+  const [isDownloadingInvoice, setIsDownloadingInvoice] = useState(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -99,6 +104,42 @@ export default function OrderDetailPage() {
   const order = orderQuery.data;
   const loadFailed = Boolean(orderQuery.error);
   const notFound = !isLoading && !order && !orderQuery.error;
+  const handleInvoiceDownload = useCallback(async () => {
+    if (!orderId || typeof window === "undefined") {
+      return;
+    }
+    const token = window.localStorage.getItem("token");
+    if (!token) {
+      router.push("/auth");
+      return;
+    }
+
+    const invoiceUrl = `${API_BASE_URL}/orders/${orderId}/invoice.pdf`;
+    try {
+      setIsDownloadingInvoice(true);
+      const response = await fetch(invoiceUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      if (!response.ok) {
+        throw new Error("Failed to download invoice");
+      }
+      const blob = await response.blob();
+      const blobUrl = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = blobUrl;
+      link.download = `invoice-${orderId}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(blobUrl);
+    } catch (error) {
+      console.error("Invoice download failed", error);
+    } finally {
+      setIsDownloadingInvoice(false);
+    }
+  }, [orderId, router]);
 
   const summaryRows = order
     ? [
@@ -179,6 +220,17 @@ export default function OrderDetailPage() {
                             : "—"}
                         </Typography>
                       </Stack>
+                      {order.invoiceAvailable ? (
+                        <Button
+                          sx={{ mt: 2 }}
+                          variant="contained"
+                          fullWidth
+                          disabled={isDownloadingInvoice}
+                          onClick={handleInvoiceDownload}
+                        >
+                          دانلود فاکتور PDF
+                        </Button>
+                      ) : null}
                     </CardContent>
                   </Card>
 

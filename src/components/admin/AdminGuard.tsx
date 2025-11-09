@@ -2,7 +2,6 @@
 
 import { ReactNode, useEffect, useState } from "react";
 import { useRouter, usePathname } from "@/navigation";
-import apiAdmin from "@/lib/apiAdmin";
 
 type AdminGuardProps = {
   children: ReactNode;
@@ -26,38 +25,17 @@ const AdminGuard = ({ children, locale }: AdminGuardProps) => {
 
     const token = window.localStorage.getItem("admin_token");
     if (!token) {
-      if (isLoginRoute) {
+      if (!isLoginRoute) {
+        const loginPath = `/${locale}/admin/login`;
+        router.replace(`${loginPath}?redirect=${encodeURIComponent(normalizedPath)}`);
+      } else {
         setVerified(true);
-        return;
       }
-      router.replace(`/admin/login?redirect=${encodeURIComponent(normalizedPath)}`);
       return;
     }
 
-    let active = true;
-
-    const validate = async () => {
-      try {
-        await apiAdmin.get("/users/me");
-        if (active) {
-          setVerified(true);
-        }
-      } catch {
-        window.localStorage.removeItem("admin_token");
-        if (isLoginRoute) {
-          setVerified(true);
-        } else {
-          router.replace(`/admin/login?redirect=${encodeURIComponent(normalizedPath)}`);
-        }
-      }
-    };
-
-    validate();
-
-    return () => {
-      active = false;
-    };
-  }, [isLoginRoute, locale, normalizedPath, pathname, router]);
+    setVerified(true);
+  }, [isLoginRoute, locale, normalizedPath, router]);
 
   if (!verified) {
     return null;

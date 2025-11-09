@@ -14,7 +14,7 @@ import {
 import { useRouter } from "@/navigation";
 import { useParams, useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
-import apiAdmin from "@/lib/apiAdmin";
+import api from "@/lib/api";
 import { defaultLocale } from "@/i18n/locales";
 
 function AdminLoginPageInner() {
@@ -35,7 +35,7 @@ function AdminLoginPageInner() {
       setLoading(true);
 
       try {
-        const response = await apiAdmin.post("/auth/admin/login", {
+        const response = await api.post("/auth/admin/login", {
           phone,
           password,
         });
@@ -50,15 +50,14 @@ function AdminLoginPageInner() {
         }
 
         const redirectParam = searchParams.get("redirect");
-        let redirect = redirectParam ?? "/admin";
-        const localePrefix = `/${locale}`;
-        if (redirect.startsWith(localePrefix)) {
-          redirect = redirect.slice(localePrefix.length) || "/";
-        }
-        router.replace(redirect);
+        const destination = redirectParam
+          ? `/${locale}${redirectParam.startsWith("/") ? redirectParam : `/${redirectParam}`}`
+          : `/${locale}/admin`;
+        router.replace(destination);
       } catch (err) {
         const message =
-          err instanceof Error ? err.message : t("error");
+          (err as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+          (err instanceof Error ? err.message : t("error"));
         setError(message);
       } finally {
         setLoading(false);
@@ -86,7 +85,7 @@ function AdminLoginPageInner() {
                 {t("login.title")}
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
-                لطفاً شماره موبایل و رمز عبور خود را وارد کنید.
+                {t("login.description")}
               </Typography>
             </Box>
 
@@ -113,7 +112,7 @@ function AdminLoginPageInner() {
               size="large"
               disabled={loading}
             >
-              {loading ? "Signing in..." : t("login.submit")}
+              {loading ? t("login.loading") : t("login.submit")}
             </Button>
           </Stack>
         </CardContent>

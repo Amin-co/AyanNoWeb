@@ -2,11 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
+  Alert,
   Box,
+  Button,
   Card,
   CardContent,
   Chip,
-  CircularProgress,
+  Skeleton,
+  Snackbar,
   Stack,
   Table,
   TableBody,
@@ -15,14 +18,17 @@ import {
   TableHead,
   TableRow,
   Typography,
-  Button,
-  Alert,
 } from "@mui/material";
 import Grid from "@mui/material/GridLegacy";
 import { useTranslations } from "next-intl";
 import { useParams } from "next/navigation";
 import { Link } from "@/navigation";
 import apiAdmin from "@/lib/apiAdmin";
+
+type KpiResponse = {
+  ordersCount: number;
+  salesTotal: number;
+};
 
 type AdminOrdersResponse = {
   items: Array<{
@@ -35,13 +41,6 @@ type AdminOrdersResponse = {
       phone?: string | null;
     } | null;
   }>;
-  pagination: {
-    totalItems: number;
-  };
-  totals: {
-    totalOrders: number;
-    totalAmount: number;
-  };
 };
 
 const goldColor = "#D4AF37";
@@ -62,13 +61,12 @@ const statusColor = (status: string): "default" | "info" | "warning" | "success"
   }
 };
 
-const formatCurrency = (value: number, locale: string) => {
-  return new Intl.NumberFormat(locale === "fa" ? "fa-IR" : "en-US", {
+const formatCurrency = (value: number, locale: string) =>
+  new Intl.NumberFormat(locale === "fa" ? "fa-IR" : "en-US", {
     style: "currency",
     currency: "IRR",
     maximumFractionDigits: 0,
   }).format(value);
-};
 
 export default function AdminHomePage() {
   const params = useParams<{ locale: string }>();
@@ -76,81 +74,60 @@ export default function AdminHomePage() {
   const t = useTranslations("admin");
 
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  const [data, setData] = useState<AdminOrdersResponse | null>(null);
+  const [orders, setOrders] = useState<AdminOrdersResponse["items"]>([]);
+  const [kpi, setKpi] = useState<KpiResponse>({ ordersCount: 0, salesTotal: 0 });
+  const [snackbar, setSnackbar] = useState<{ open: boolean; message: string }>({ open: false, message: "" });
 
   useEffect(() => {
+    let active = true;
     const fetchDashboard = async () => {
       setLoading(true);
-      setError(null);
       try {
-        const now = new Date();
-        const dateFrom = new Date(now);
-        dateFrom.setHours(0, 0, 0, 0);
-        const dateTo = new Date(now);
-        dateTo.setHours(23, 59, 59, 999);
+        const [kpiResponse, ordersResponse] = await Promise.all([
+          apiAdmin.get("/admin/kpi/today"),
+          apiAdmin.get("/admin/orders", { params: { limit: 10, page: 1 } }),
+        ]);
 
-        const response = await apiAdmin.get("/admin/orders", {
-          params: {
-            dateFrom: dateFrom.toISOString(),
-            dateTo: dateTo.toISOString(),
-            limit: 10,
-            page: 1,
-          },
-        });
+        if (!active) {
+          return;
+        }
 
-        const payload = response.data?.data;
-        setData(payload ?? null);
-      } catch (err) {
-        const message = err instanceof Error ? err.message : "خطا در دریافت اطلاعات داشبورد";
-        setError(message);
+        setKpi(kpiResponse.data?.data ?? { ordersCount: 0, salesTotal: 0 });
+        setOrders(ordersResponse.data?.data?.items ?? []);
+      } catch (error) {
+        if (!active) {
+          return;
+        }
+        const message =
+          (error as { response?: { data?: { message?: string } } })?.response?.data?.message ??
+          (error instanceof Error ? error.message : t("error"));
+        setSnackbar({ open: true, message });
       } finally {
-        setLoading(false);
+        if (active) {
+          setLoading(false);
+        }
       }
     };
 
     fetchDashboard();
-  }, []);
+    return () => {
+      active = false;
+    };
+  }, [t]);
 
-  const kpis = useMemo(() => {
-    const totalOrders = data?.totals?.totalOrders ?? 0;
-    const totalSales = data?.totals?.totalAmount ?? 0;
-    return [
+  const kpis = useMemo(
+    () => [
       {
-        label: "تعداد سفارش‌های امروز",
-        value: totalOrders ? totalOrders.toLocaleString(locale === "fa" ? "fa-IR" : "en-US") : "۰",
+        label: t("kpi.ordersToday"),
+        value: kpi.ordersCount.toLocaleString(locale === "fa" ? "fa-IR" : "en-US"),
       },
       {
-        label: "مجموع فروش امروز",
-        value: formatCurrency(totalSales, locale),
+        label: t("kpi.salesToday"),
+        value: formatCurrency(kpi.salesTotal, locale),
       },
-      {
-        label: "درصد تحویل به موقع",
-        value: "—",
-      },
-      {
-        label: "ظرفیت باز بازه‌های تحویل",
-        value: "—",
-      },
-    ];
-  }, [data, locale]);
-
-  const latestOrders = data?.items ?? [];
-
-  if (loading) {
-    return (
-      <Box
-        sx={{
-          display: "flex",
-          minHeight: "50vh",
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <CircularProgress />
-      </Box>
-    );
-  }
+    ],
+    [kpi.ordersCount, kpi.salesTotal, locale, t],
+  );
 
   return (
     <Stack spacing={4}>
@@ -158,26 +135,29 @@ export default function AdminHomePage() {
         {t("home.title")}
       </Typography>
 
-      {error ? (
-        <Alert severity="error">{error}</Alert>
-      ) : null}
-
       <Grid container spacing={3}>
         {kpis.map((item) => (
-          <Grid item xs={12} md={3} key={item.label}>
+          <Grid item xs={12} md={6} key={item.label}>
             <Card
               sx={{
                 borderTop: `4px solid ${goldColor}`,
                 bgcolor: "background.paper",
+                minHeight: 120,
+                display: "flex",
+                alignItems: "center",
               }}
             >
-              <CardContent>
+              <CardContent sx={{ width: "100%" }}>
                 <Typography variant="subtitle2" color="text.secondary">
                   {item.label}
                 </Typography>
-                <Typography variant="h5" fontWeight={800} sx={{ color: goldColor, mt: 1 }}>
-                  {item.value}
-                </Typography>
+                {loading ? (
+                  <Skeleton variant="text" height={48} sx={{ mt: 1 }} />
+                ) : (
+                  <Typography variant="h4" fontWeight={800} sx={{ color: goldColor, mt: 1 }}>
+                    {item.value}
+                  </Typography>
+                )}
               </CardContent>
             </Card>
           </Grid>
@@ -185,64 +165,79 @@ export default function AdminHomePage() {
       </Grid>
 
       <Card>
-        <CardContent sx={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-          <div>
+        <CardContent
+          sx={{
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            gap: 2,
+            flexWrap: "wrap",
+          }}
+        >
+          <Box>
             <Typography variant="h6" fontWeight={700}>
-              {t("orders.title")}
+              {t("orders.latest")}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              {latestOrders.length > 0
-                ? "۱۰ سفارش اخیر امروز"
-                : "سفارشی برای امروز ثبت نشده است."}
+              {t("orders.subtitle")}
             </Typography>
-          </div>
+          </Box>
           <Button component={Link} href="/admin/orders" variant="outlined" sx={{ borderColor: goldColor }}>
-            مشاهده همه
+            {t("orders.viewAll")}
           </Button>
         </CardContent>
         <TableContainer>
           <Table>
             <TableHead>
               <TableRow>
-                <TableCell>کد سفارش</TableCell>
-                <TableCell>مشتری</TableCell>
-                <TableCell>تاریخ</TableCell>
-                <TableCell>وضعیت</TableCell>
-                <TableCell>جمع</TableCell>
-                <TableCell align="left">جزئیات</TableCell>
+                <TableCell>{t("orders.table.code")}</TableCell>
+                <TableCell>{t("orders.table.phone")}</TableCell>
+                <TableCell>{t("orders.table.createdAt")}</TableCell>
+                <TableCell>{t("orders.table.status")}</TableCell>
+                <TableCell>{t("orders.table.total")}</TableCell>
+                <TableCell align="left">{t("orders.table.actions")}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
-              {latestOrders.map((order) => (
-                <TableRow key={order.id}>
-                  <TableCell>{order.orderCode}</TableCell>
-                  <TableCell>{order.user?.phone ?? "—"}</TableCell>
-                  <TableCell>
-                    {new Date(order.createdAt).toLocaleString(
-                      locale === "fa" ? "fa-IR" : "en-US",
-                      { hour12: false },
-                    )}
-                  </TableCell>
-                  <TableCell>
-                    <Chip
-                      label={order.status}
-                      color={statusColor(order.status)}
-                      size="small"
-                      sx={{ fontWeight: 600 }}
-                    />
-                  </TableCell>
-                  <TableCell>{formatCurrency(order.total ?? 0, locale)}</TableCell>
-                  <TableCell>
-                    <Button component={Link} href={`/admin/orders/${order.id}`} size="small">
-                      {t("orders.view")}
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-              {latestOrders.length === 0 ? (
+              {loading
+                ? Array.from({ length: 5 }).map((_, rowIndex) => (
+                    <TableRow key={`skeleton-${rowIndex}`}>
+                      {Array.from({ length: 6 }).map((__, cellIndex) => (
+                        <TableCell key={cellIndex}>
+                          <Skeleton variant="text" />
+                        </TableCell>
+                      ))}
+                    </TableRow>
+                  ))
+                : orders.map((order) => (
+                    <TableRow key={order.id}>
+                      <TableCell>{order.orderCode}</TableCell>
+                      <TableCell>{order.user?.phone ?? "—"}</TableCell>
+                      <TableCell>
+                        {new Date(order.createdAt).toLocaleString(locale === "fa" ? "fa-IR" : "en-US", {
+                          hour12: false,
+                        })}
+                      </TableCell>
+                      <TableCell>
+                        <Chip
+                          label={order.status}
+                          color={statusColor(order.status)}
+                          size="small"
+                          sx={{ fontWeight: 600 }}
+                        />
+                      </TableCell>
+                      <TableCell>{formatCurrency(order.total ?? 0, locale)}</TableCell>
+                      <TableCell>
+                        <Button component={Link} href={`/admin/orders/${order.id}`} size="small">
+                          {t("orders.view")}
+                        </Button>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+              {!loading && orders.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} align="center">
-                    هیچ سفارشی برای نمایش وجود ندارد.
+                    {t("orders.empty")}
                   </TableCell>
                 </TableRow>
               ) : null}
@@ -250,6 +245,17 @@ export default function AdminHomePage() {
           </Table>
         </TableContainer>
       </Card>
+
+      <Snackbar
+        open={snackbar.open}
+        autoHideDuration={4000}
+        onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert severity="error" variant="filled" onClose={() => setSnackbar((prev) => ({ ...prev, open: false }))}>
+          {snackbar.message}
+        </Alert>
+      </Snackbar>
     </Stack>
   );
 }
