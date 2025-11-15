@@ -27,6 +27,7 @@ type NavItem = {
 const primaryLinks: NavItem[] = [
   { href: "/admin", labelKey: "nav.dashboard" },
   { href: "/admin/orders", labelKey: "nav.orders" },
+  { href: "/admin/service-area", labelKey: "nav.serviceArea" },
   { href: "/admin/settings", labelKey: "nav.settings" },
 ];
 

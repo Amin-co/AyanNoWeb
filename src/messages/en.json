@@ -229,7 +229,8 @@
       "categories": "Categories",
       "addons": "Add-ons",
       "settings": "Settings",
-      "catalog": "Catalog"
+      "catalog": "Catalog",
+      "serviceArea": "Service areas"
     },
     "orders": {
       "title": "Order management",
@@ -363,6 +364,33 @@
     },
     "addons": {
       "title": "Add-on management"
+    },
+    "serviceAreas": {
+      "title": "Service areas",
+      "new": "New zone",
+      "edit": "Edit zone",
+      "empty": "No service areas have been defined yet.",
+      "table": {
+        "name": "Zone",
+        "description": "Description",
+        "minOrder": "Min order",
+        "shippingFee": "Delivery fee",
+        "status": "Status",
+        "sortOrder": "Order",
+        "actions": "Actions"
+      },
+      "form": {
+        "name": "Zone name",
+        "description": "Description",
+        "minOrder": "Minimum order amount",
+        "shippingFee": "Delivery fee",
+        "sortOrder": "Display order",
+        "active": "Active"
+      },
+      "messages": {
+        "validation": "Name is required.",
+        "deleteConfirm": "Delete \"{name}\"? This action cannot be undone."
+      }
     },
     "save": "Save",
     "cancel": "Cancel",
